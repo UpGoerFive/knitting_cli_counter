@@ -8,7 +8,7 @@ parser = argparse.ArgumentParser(description="Adjust, create, and switch knittin
 parser.add_argument("active_name", help="Name argument to be acted on, defaults to name of counter to increment.")
 parser.add_argument("-s", "--setup", action="store_true", help="Provide the name of a new knitting project.")
 parser.add_argument("-p", "--path", help="Path to project directory.")
-parser.add_argument("-P", "--project", help="Project to switch to.")
+parser.add_argument("-P", "--project", help="Project to switch to. Must be a relative path to the current working directory.")
 parser.add_argument("-D", "--default_counter", help="The counter to set as default.")
 args = parser.parse_args()
 
@@ -101,14 +101,30 @@ def switch_project(project_path, envs_dict):
         switch_counter(default_counter, envs_dict)
 
 def main():
+    # Make project directory
+    # TODO make this optional
     if not Path("./Projects").exists():
         Path("./Projects").mkdir()
+
+    # Environment variable capture
     envs_dict = os.environ
+
+    # Argument parsing
     if args.setup:
         path = Path(args.path) if args.path else Path("./Projects")
         project_setup(args.active_name, path, envs_dict)
     elif args.project:
-        switch_project(args.project, envs_dict)
+        switch_project(Path(args.project), envs_dict)
+    elif 'ACTIVE_PROJECT' not in envs_dict.keys():
+        current_projects = [str(child.stem) for child in Path("./Projects").iterdir()]
+        print("Project options: ")
+        print(current_projects)
+        project_choice = input("Select project to work on. Enter 'None' for a new project. ")
+        if project_choice not in current_projects:
+            project_setup(input("Enter new project name: "), Path("./Projects"), envs_dict)
+        else:
+            choice_path = Path("./Projects") / project_choice
+            switch_project(choice_path.with_suffix(".json"), envs_dict)
     elif args.default_counter:
         change_default(envs_dict['ACTIVE_PROJECT'], args.default_counter)
     elif type(args.active_name) == int:
