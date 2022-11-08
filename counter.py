@@ -60,7 +60,7 @@ def inc_counter(counter_name, active_path, num=1):
     with active_path.open() as f:
         project_dict = json.load(f)
 
-    counter = project_dict['default'] if not counter_name else counter_name
+    counter = counter_name or project_dict['default']
     project_dict['counters'][counter]['count'] += num
 
     with active_path.open(mode="w") as f:
