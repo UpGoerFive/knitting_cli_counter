@@ -5,7 +5,7 @@ from pathlib import Path
 
 ########## Start Parser ##########
 parser = argparse.ArgumentParser(description="Adjust, create, and switch knitting project counters.")
-parser.add_argument("active_name", help="Name argument to be acted on, defaults to name of counter to increment.")
+parser.add_argument("active_name", nargs='?', default='default_name', help="Name argument to be acted on, defaults to name of counter to increment.")
 parser.add_argument("-s", "--setup", action="store_true", help="Provide the name of a new knitting project.")
 parser.add_argument("-p", "--path", help="Path to project directory.")
 parser.add_argument("-P", "--project", help="Project to switch to. Must be a relative path to the current working directory.")
