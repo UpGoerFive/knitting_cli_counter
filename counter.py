@@ -39,7 +39,7 @@ def add_counters(num_counters, active_path):
     for _ in range(num_counters):
         counter_name = input("Please enter a counter name: ")
         rollover = input("Please give a rollover number for the counter: ")
-        rollover_value = None if rollover == "None" else int(rollover)
+        rollover_value = None if type(rollover) != int else int(rollover)
         counters[counter_name] = {"count": 0, "rollover": rollover_value}
 
     default_counter = input("Enter the default counter name: ")
