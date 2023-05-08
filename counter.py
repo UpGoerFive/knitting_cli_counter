@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 
 ########## Start Parser ##########
+
 parser = argparse.ArgumentParser(description="Adjust, create, and switch knitting project counters.")
 parser.add_argument("active_name", nargs='?', default='default_name', help="Name argument to be acted on, defaults to name of counter to increment.")
 parser.add_argument("-s", "--setup", action="store_true", help="Provide the name of a new knitting project.")
@@ -62,6 +63,7 @@ def inc_counter(counter_name, active_path, num=1):
 
     counter = counter_name or project_dict['default']
     project_dict['counters'][counter]['count'] += num
+    print(f"Counter: {counter_name} incremented by {num}")
 
     with active_path.open(mode="w") as f:
         json.dump(project_dict, f)
@@ -128,7 +130,7 @@ def main():
     elif args.default_counter:
         change_default(envs_dict['ACTIVE_PROJECT'], args.default_counter)
     elif type(args.active_name) == int:
-        inc_counter(None, envs_dict['ACTIVE_PROJECT'])
+        inc_counter(None, envs_dict['ACTIVE_PROJECT'], args.active_name)
     else:
         inc_counter(args.active_name, envs_dict['ACTIVE_PROJECT'])
 
