@@ -16,7 +16,7 @@ args = parser.parse_args()
 ########## Project functions ##########
 
 # Setup a knitting project
-def project_setup(name, path, envs_dict, set_active=True):
+def project_setup(name, path, set_active=True):
     """
     Start a project with a new 'name.json' file in the path directory. Optionally sets the
     new project as the active one.
@@ -25,7 +25,7 @@ def project_setup(name, path, envs_dict, set_active=True):
     with project_file.open(mode = "x") as f:
         json.dump({'counters': {}, 'description': '', 'default': ''}, f)
     add_counters(int(input("Enter the number of counters in the project: ")), project_file)
-    switch_project(project_file, envs_dict)
+    switch_project(project_file)
 
 # Add counters to project with counter logic
 def add_counters(num_counters, active_path):
@@ -82,25 +82,25 @@ def change_default(project_path, new_counter):
         json.dump(project_dict, f)
 
 # Switch default counter variable
-def switch_counter(next_name, envs_dict):
+def switch_counter(next_name):
     """
     Switches the default counter environment variable to the next_name counter.
     """
-    current_counter = envs_dict.get('DEFAULT_COUNTER', next_name)
+    current_counter = os.environ.get('DEFAULT_COUNTER', next_name)
     if current_counter != next_name:
-        envs_dict['DEFAULT_COUNTER'] = next_name
+        os.environ['DEFAULT_COUNTER'] = next_name
 
 # Switch default project
-def switch_project(project_path, envs_dict):
+def switch_project(project_path):
     """
     Switches the active project to next_project located in project_path.
     """
-    current_project = envs_dict.get('ACTIVE_PROJECT') # Not setting a default so the counter gets updated as well.
+    current_project = os.environ.get('ACTIVE_PROJECT') # Not setting a default so the counter gets updated as well.
     if current_project != str(project_path):
-        envs_dict['ACTIVE_PROJECT'] = str(project_path)
+        os.environ['ACTIVE_PROJECT'] = str(project_path)
         with project_path.open() as f:
             default_counter = json.load(f)['default']
-        switch_counter(default_counter, envs_dict)
+        switch_counter(default_counter)
 
 def main():
     # Make project directory
@@ -108,31 +108,28 @@ def main():
     if not Path("./Projects").exists():
         Path("./Projects").mkdir()
 
-    # Environment variable capture
-    envs_dict = os.environ
-
     # Argument parsing
     if args.setup:
         path = Path(args.path) if args.path else Path("./Projects")
-        project_setup(args.active_name, path, envs_dict)
+        project_setup(args.active_name, path)
     elif args.project:
-        switch_project(Path(args.project), envs_dict)
-    elif 'ACTIVE_PROJECT' not in envs_dict.keys():
+        switch_project(Path(args.project))
+    elif 'ACTIVE_PROJECT' not in os.environ:
         current_projects = [str(child.stem) for child in Path("./Projects").iterdir()]
         print("Project options: ")
         print(current_projects)
         project_choice = input("Select project to work on. Enter 'None' for a new project. ")
         if project_choice not in current_projects:
-            project_setup(input("Enter new project name: "), Path("./Projects"), envs_dict)
+            project_setup(input("Enter new project name: "), Path("./Projects"))
         else:
             choice_path = Path("./Projects") / project_choice
-            switch_project(choice_path.with_suffix(".json"), envs_dict)
+            switch_project(choice_path.with_suffix(".json"))
     elif args.default_counter:
-        change_default(envs_dict['ACTIVE_PROJECT'], args.default_counter)
+        change_default(os.environ['ACTIVE_PROJECT'], args.default_counter)
     elif type(args.active_name) == int:
-        inc_counter(None, envs_dict['ACTIVE_PROJECT'], args.active_name)
+        inc_counter(None, os.environ['ACTIVE_PROJECT'], args.active_name)
     else:
-        inc_counter(args.active_name, envs_dict['ACTIVE_PROJECT'])
+        inc_counter(args.active_name, os.environ['ACTIVE_PROJECT'])
 
 if __name__ == "__main__":
     main()
