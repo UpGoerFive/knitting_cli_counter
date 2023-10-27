@@ -34,6 +34,7 @@ def add_counters(num_counters, project_dict):
     Adds num_counters amount of counters to the project json. Asks user for names, rollover value, and relationship
     between counters.
     """
+    # TODO set counter relationships
     counters = project_dict['counters']
     for _ in range(num_counters):
         counter_name = input("Please enter a counter name: ")
@@ -55,12 +56,14 @@ def inc_counter(counter_name, project_dict, num=1):
     """
     Increments counter by num.
     """
-    counter = counter_name or project_dict['default']
+    actual_name = counter_name or project_dict['default']
+    counter = project_dict['counters'][actual_name]
 
-    start = int(project_dict['counters'][counter]['count'])
-    project_dict['counters'][counter]['count'] = str(start+num)
+    start = int(counter['count'])
+    rollover = int(counter['rollover'])
+    counter['count'] = str((start+num) % rollover) if rollover else str(start + num)
 
-    print(f"Counter: {counter_name} incremented by {num}")
+    print(f"Counter: {counter_name} incremented by {num} to {counter['count']}")
 
 
 def change_project_default(project_dict, new_counter):
