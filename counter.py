@@ -1,9 +1,12 @@
+#!/usr/bin/env python3
+
 import argparse
 import json
 import os
+import tomlkit
 from pathlib import Path
 
-########## Start Parser ##########
+########## Start Parser ###############
 
 parser = argparse.ArgumentParser(description="Adjust, create, and switch knitting project counters.")
 parser.add_argument("active_name", nargs='?', default='default_name', help="Name argument to be acted on, defaults to name of counter to increment.")
@@ -82,7 +85,7 @@ def change_default(project_path, new_counter):
         json.dump(project_dict, f)
 
 # Switch default counter variable
-def switch_counter(next_name):
+def switch_counter(next_name, config="./knitter.toml"):
     """
     Switches the default counter environment variable to the next_name counter.
     """
@@ -102,11 +105,28 @@ def switch_project(project_path):
             default_counter = json.load(f)['default']
         switch_counter(default_counter)
 
-def main():
-    # Make project directory
-    # TODO make this optional
+
+def knit_config():
+    """
+    Configuration setup for knitting counter. Potential refactor target for setup tools if
+    this ever becomes a package for distribution. Creates a `./Projects/` directory and
+    `knitter.toml` config file.
+    """
+
+    doc = tomlkit.document()
+    doc.add("Projects Directory", "./Projects")
+    with open("./knitter.toml", "x") as file:
+        tomlkit.dump(doc, file)
+
     if not Path("./Projects").exists():
         Path("./Projects").mkdir()
+
+
+def main():
+    # Make project directory
+    # Moving to a config file for settings, rather than environment variable mess.
+    if not Path("./knitter.toml").exists():
+        knit_config()
 
     # Argument parsing
     if args.setup:
