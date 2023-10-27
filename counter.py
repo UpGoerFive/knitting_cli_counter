@@ -21,14 +21,24 @@ args = parser.parse_args()
 # Setup a knitting project
 def project_setup(name, path, set_active=True):
     """
-    Start a project with a new 'name.json' file in the path directory. Optionally sets the
-    new project as the active one.
+    Start a project with a new 'name.json' file in the path directory. Always sets new
+    project as `Current Project` if there is none, and optionally does so otherwise.
     """
+
     project_file = Path(path) / f"{name}.json"
+
+    with open("./knitter.toml", "r") as file:
+        settings = tomlkit.load(file)
+
+    if "Current Project" not in settings or set_active:
+        settings["Current Project"] = project_file
+        with open("./knitter.toml", "w") as file:
+            tomlkit.dump(settings, file)
+
     with project_file.open(mode = "x") as f:
         json.dump({'counters': {}, 'description': '', 'default': ''}, f)
     add_counters(int(input("Enter the number of counters in the project: ")), project_file)
-    switch_project(project_file)
+    switch_default_project(project_file)
 
 # Add counters to project with counter logic
 def add_counters(num_counters, active_path):
@@ -65,14 +75,15 @@ def inc_counter(counter_name, active_path, num=1):
         project_dict = json.load(f)
 
     counter = counter_name or project_dict['default']
-    project_dict['counters'][counter]['count'] += num
+    start = int(project_dict['counters'][counter]['count'])
+    project_dict['counters'][counter]['count'] = str(start+num)
     print(f"Counter: {counter_name} incremented by {num}")
 
     with active_path.open(mode="w") as f:
         json.dump(project_dict, f)
 
 # Switch default counter in project
-def change_default(project_path, new_counter):
+def change_project_default(project_path, new_counter):
     """
     Switches the stored default counter in the project json file.
     """
@@ -85,26 +96,39 @@ def change_default(project_path, new_counter):
         json.dump(project_dict, f)
 
 # Switch default counter variable
-def switch_counter(next_name, config="./knitter.toml"):
+def switch_default_counter(next_name, config):
     """
     Switches the default counter environment variable to the next_name counter.
+    config should be a tomlkit document.
     """
-    current_counter = os.environ.get('DEFAULT_COUNTER', next_name)
-    if current_counter != next_name:
-        os.environ['DEFAULT_COUNTER'] = next_name
+    config["Default Counter"] = next_name
+    return config
+
 
 # Switch default project
-def switch_project(project_path):
+def switch_default_project(project, config):
     """
-    Switches the active project to next_project located in project_path.
+    Switches the active project to project_path. Also call switches the
+    default counter in config. config should be a tomlkit document.
     """
-    current_project = os.environ.get('ACTIVE_PROJECT') # Not setting a default so the counter gets updated as well.
-    if current_project != str(project_path):
-        os.environ['ACTIVE_PROJECT'] = str(project_path)
-        with project_path.open() as f:
-            default_counter = json.load(f)['default']
-        switch_counter(default_counter)
+    config["Default Project"] = project["name"]
+    return switch_default_counter(project["default"], config)
 
+
+def get_config(config_file="./knitter.toml"):
+    """
+    Gets tomlkit document object from config file.
+    """
+    with open(config_file, "r") as file:
+        config = tomlkit.load(file)
+    return config
+
+def put_config(config, config_file="./knitter.toml"):
+    """
+    Writes tomlkit document to config_file.
+    """
+    with open(config_file, "w") as file:
+        tomlkit.dump(config, file)
 
 def knit_config():
     """
@@ -115,8 +139,8 @@ def knit_config():
 
     doc = tomlkit.document()
     doc.add("Projects Directory", "./Projects")
-    with open("./knitter.toml", "x") as file:
-        tomlkit.dump(doc, file)
+    doc.add("Available Projects", "")
+    put_config(doc)
 
     if not Path("./Projects").exists():
         Path("./Projects").mkdir()
@@ -129,27 +153,21 @@ def main():
         knit_config()
 
     # Argument parsing
+    settings = get_config()
+
     if args.setup:
         path = Path(args.path) if args.path else Path("./Projects")
         project_setup(args.active_name, path)
     elif args.project:
-        switch_project(Path(args.project))
-    elif 'ACTIVE_PROJECT' not in os.environ:
-        current_projects = [str(child.stem) for child in Path("./Projects").iterdir()]
-        print("Project options: ")
-        print(current_projects)
-        project_choice = input("Select project to work on. Enter 'None' for a new project. ")
-        if project_choice not in current_projects:
-            project_setup(input("Enter new project name: "), Path("./Projects"))
-        else:
-            choice_path = Path("./Projects") / project_choice
-            switch_project(choice_path.with_suffix(".json"))
+        switch_default_project(Path(args.project), settings)
+    elif 'Current Project' not in settings:
+        project_setup(input("Enter new project name: "), Path("./Projects"))
     elif args.default_counter:
-        change_default(os.environ['ACTIVE_PROJECT'], args.default_counter)
-    elif type(args.active_name) == int:
-        inc_counter(None, os.environ['ACTIVE_PROJECT'], args.active_name)
+        change_project_default(settings['Current Project'], args.default_counter)
+    elif args.active_name.isnumeric():
+        inc_counter(None, settings['Current Project'], args.active_name)
     else:
-        inc_counter(args.active_name, os.environ['ACTIVE_PROJECT'])
+        inc_counter(args.active_name, settings['Current Project'])
 
 if __name__ == "__main__":
     main()
