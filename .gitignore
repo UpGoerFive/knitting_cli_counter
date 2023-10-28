@@ -166,3 +166,4 @@ cython_debug/
 
 # Counter files
 /Projects
+knitter.toml
