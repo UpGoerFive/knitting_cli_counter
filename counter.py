@@ -21,10 +21,9 @@ def project_setup(name, path, settings, set_active=True):
     settings["Available Projects"].append(str(project_file))
 
     if "Current Project" not in settings or set_active:
-        switch_current_project(project_dict, settings)
+        switch_current_project(project_file, settings)
 
     add_counters(int(input("Enter the number of counters in the project: ")), project_dict)
-    switch_current_project(project_dict, settings)
 
     with open(project_file, "x") as file:
         json.dump(project_dict, file)
@@ -74,12 +73,17 @@ def change_project_default(project_dict, new_counter):
     project_dict['default'] = new_counter
 
 
-def switch_current_project(project, config):
+def switch_current_project(project_file, config):
     """
-    Switches the active project to project['name'].
+    Switches the active project to project_file.
     config should be a tomlkit document.
     """
-    config["Current Project"] = project["name"]
+    if project_file in config['Available Projects']:
+        config["Current Project"] = project_file
+    else:
+        print(list(enumerate(config["Available Projects"])))
+        choice = int(input("Select index of project to switch to from list:\n"))
+        config["Current Project"] = config["Available Projects"][choice]
 
 
 def get_config(config_file="./knitter.toml"):
@@ -150,6 +154,7 @@ def main(args):
     # argparse handling
     if args.setup or 'Current Project' not in settings:
         path = args.setup[1] if len(args.setup) > 1 else "./Projects"
+        make_project_dir(folder=path)
         project_setup(args.setup[0], path, settings)
     elif args.project:
         switch_current_project(args.project, settings)
@@ -164,6 +169,8 @@ def main(args):
         # increment a specific counter in the default project by 1
         project_dict = get_project(settings['Current Project'])
         counter_name = None
+
+        # allows for handling of no arguments provided
         if args.active_name != "default_name":
             counter_name = args.active_name
         inc_counter(counter_name, project_dict)
@@ -176,8 +183,7 @@ if __name__ == "__main__":
 ########## Start Parser ###############
     parser = argparse.ArgumentParser(description="Adjust, create, and switch knitting project counters.")
     parser.add_argument("active_name", nargs='?', default='default_name', help="Name argument to be acted on, defaults to name of counter to increment.")
-    parser.add_argument("-s", "--setup", nargs="*", help="Provide the name of a new knitting project.")
-    # parser.add_argument("-p", "--path", help="Path to project directory.")
+    parser.add_argument("-s", "--setup", nargs="*", help="Provide the name of a new knitting project. Optional second item can be a directory location to put project file in.")
     parser.add_argument("-p", "--project", help="Project to switch to. Must be a relative path to the current working directory.")
     parser.add_argument("-D", "--default_counter", help="The counter to set as default.")
     args = parser.parse_args()
