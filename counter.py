@@ -16,7 +16,6 @@ def project_setup(name, path, settings, set_active=True):
     if name == "default_name":
         name = input("Enter a name for the new project: ")
 
-    print(name)
     project_file = Path(path) / f"{name}.json"
     project_dict = {'name': str(project_file), 'counters': {}, 'description': '', 'default': ''}
     settings["Available Projects"].append(str(project_file))
@@ -150,8 +149,8 @@ def main(args):
 
     # argparse handling
     if args.setup or 'Current Project' not in settings:
-        path = Path(args.path) if args.path else Path("./Projects")
-        project_setup(args.active_name, path, settings)
+        path = args.setup[1] if len(args.setup) > 1 else "./Projects"
+        project_setup(args.setup[0], path, settings)
     elif args.project:
         switch_current_project(args.project, settings)
     elif args.default_counter:
@@ -164,7 +163,10 @@ def main(args):
     elif args.active_name:
         # increment a specific counter in the default project by 1
         project_dict = get_project(settings['Current Project'])
-        inc_counter(args.active_name, project_dict)
+        counter_name = None
+        if args.active_name != "default_name":
+            counter_name = args.active_name
+        inc_counter(counter_name, project_dict)
 
     put_config(settings)
     if project_dict:
@@ -174,9 +176,9 @@ if __name__ == "__main__":
 ########## Start Parser ###############
     parser = argparse.ArgumentParser(description="Adjust, create, and switch knitting project counters.")
     parser.add_argument("active_name", nargs='?', default='default_name', help="Name argument to be acted on, defaults to name of counter to increment.")
-    parser.add_argument("-s", "--setup", action="store_true", help="Provide the name of a new knitting project.")
-    parser.add_argument("-p", "--path", help="Path to project directory.")
-    parser.add_argument("-P", "--project", help="Project to switch to. Must be a relative path to the current working directory.")
+    parser.add_argument("-s", "--setup", nargs="*", help="Provide the name of a new knitting project.")
+    # parser.add_argument("-p", "--path", help="Path to project directory.")
+    parser.add_argument("-p", "--project", help="Project to switch to. Must be a relative path to the current working directory.")
     parser.add_argument("-D", "--default_counter", help="The counter to set as default.")
     args = parser.parse_args()
     main(args)
