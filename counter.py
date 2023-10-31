@@ -6,9 +6,6 @@ import tomlkit
 from pathlib import Path
 
 
-########## Project functions ##########
-
-
 def project_setup(name, path, settings, set_active=True):
     """
     Start a project with a new 'name.json' file in the path directory. Always sets new
@@ -163,7 +160,12 @@ def main(args):
     project_dict = None
 
     # argparse handling
-    if args.setup or "Current Project" not in settings:
+    if "Current Project" not in settings:
+        path = input("Enter project directory or leave blank for default ./Projects/" ) or "./Projects"
+        make_project_dir(folder=path)
+        project_setup(args.active_name, path, settings)
+    # Previously combined with the preceding condition. Separated for readability.
+    elif args.setup:
         path = args.setup[1] if len(args.setup) > 1 else "./Projects"
         make_project_dir(folder=path)
         project_setup(args.setup[0], path, settings)
@@ -206,6 +208,7 @@ if __name__ == "__main__":
         "-s",
         "--setup",
         nargs="*",
+        # default="default_name",
         help="Provide the name of a new knitting project. Optional second item can be a directory location to put project file in.",
     )
     parser.add_argument(
