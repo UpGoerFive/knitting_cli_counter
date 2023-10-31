@@ -52,7 +52,7 @@ def add_counters(num_counters, project_dict):
     default_counter = input("Enter the default counter name: ")
     if default_counter not in counters.keys():
         print(
-            f"The default counter entered was not in {list(counters.keys())} and will be the first listed.\nYou can change this with the -D option."
+            f"The default counter entered was not in {list(counters.keys())} and will be the first listed.\nYou can change this with the -d option."
         )
         default_counter = list(counters.keys())[0]
         print(f"The default counter is {default_counter}")
@@ -217,7 +217,10 @@ if __name__ == "__main__":
         help="Project to switch to. Must be a relative path to the current working directory.",
     )
     parser.add_argument(
-        "-D", "--default_counter", help="The counter to set as default."
+        "-d", "--default_counter", help="The counter to set as default."
+    )
+    parser.add_argument(
+        "-i", "--interactive", help="Run counter interactively."
     )
     args = parser.parse_args()
     main(args)
