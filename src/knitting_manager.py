@@ -101,7 +101,7 @@ def switch_current_project(project_file, config):
         config["Current Project"] = config["Available Projects"][choice]
 
 
-def get_config(config_file="./knitter.toml"):
+def get_config(config_file="../knitter.toml"):
     """
     Gets tomlkit document object from config file.
     """
@@ -111,7 +111,7 @@ def get_config(config_file="./knitter.toml"):
     return config
 
 
-def put_config(config, config_file="./knitter.toml"):
+def put_config(config, config_file="../knitter.toml"):
     """
     Writes tomlkit document to config_file.
     """
@@ -137,7 +137,7 @@ def put_project(project_dict):
         json.dump(project_dict, file)
 
 
-def make_project_dir(folder="./Projects"):
+def make_project_dir(folder="../Projects"):
     """
     Separate Project directory creation. Use in config init and
     project setup.
@@ -155,7 +155,7 @@ def config_init():
     """
 
     doc = tomlkit.document()
-    doc.add("Projects Directory", "./Projects")
+    doc.add("Projects Directory", "../Projects")
     doc.add("Available Projects", [])
     put_config(doc)
     make_project_dir()
@@ -167,7 +167,7 @@ def main(args):
     """
     # config handling
 
-    if not Path("./knitter.toml").exists():
+    if not Path("../knitter.toml").exists():
         config_init()
     settings = get_config()
     project_dict = None
@@ -176,14 +176,14 @@ def main(args):
 
     if "Current Project" not in settings:
         path = (
-            input("Enter project directory or leave blank for default ./Projects/")
-            or "./Projects"
+            input("Enter project directory or leave blank for default ../Projects/")
+            or "../Projects"
         )
         make_project_dir(folder=path)
         project_setup(args.active_name, path, settings)
     # Previously combined with the preceding condition. Separated for readability.
     elif args.setup:
-        path = args.setup[1] if len(args.setup) > 1 else "./Projects"
+        path = args.setup[1] if len(args.setup) > 1 else "../Projects"
         make_project_dir(folder=path)
         project_setup(args.setup[0], path, settings)
     elif args.project:
