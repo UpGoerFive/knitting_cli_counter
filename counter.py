@@ -3,8 +3,6 @@
 import argparse
 import json
 import tomlkit
-import time
-from turtle import Screen
 from pathlib import Path
 
 
@@ -163,10 +161,7 @@ def main(args):
 
     # argparse handling
     if "Current Project" not in settings:
-        path = (
-            input("Enter project directory or leave blank for default ./Projects/")
-            or "./Projects"
-        )
+        path = input("Enter project directory or leave blank for default ./Projects/" ) or "./Projects"
         make_project_dir(folder=path)
         project_setup(args.active_name, path, settings)
     # Previously combined with the preceding condition. Separated for readability.
@@ -179,23 +174,6 @@ def main(args):
     elif args.default_counter:
         project_dict = get_project(settings["Current Project"])
         change_project_default(project_dict, args.default_counter)
-    elif args.interactive:
-        project_dict = get_project(settings["Current Project"])
-        counting = True
-
-        def increm():
-            nonlocal project_dict
-            inc_counter(None, project_dict)
-
-        def exit_counter():
-            nonlocal counting
-            counting = False
-
-        screen = Screen()
-        screen.setup(300, 300)
-        screen.onkey(increm, "Up")
-        screen.listen()
-        screen.mainloop()
     elif args.active_name.isnumeric():
         # increment default counter in default project if only number is given
         project_dict = get_project(settings["Current Project"])
@@ -242,7 +220,7 @@ if __name__ == "__main__":
         "-d", "--default_counter", help="The counter to set as default."
     )
     parser.add_argument(
-        "-i", "--interactive", action="store_true", help="Run counter interactively."
+        "-i", "--interactive", help="Run counter interactively."
     )
     args = parser.parse_args()
     main(args)
