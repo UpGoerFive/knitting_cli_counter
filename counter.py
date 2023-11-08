@@ -2,8 +2,8 @@
 
 import argparse
 import json
-import tomlkit
 from pathlib import Path
+import tomlkit
 
 
 def project_setup(name, path, settings, set_active=True):
@@ -11,6 +11,7 @@ def project_setup(name, path, settings, set_active=True):
     Start a project with a new 'name.json' file in the path directory. Always sets new
     project as `Current Project` if there is none, and optionally does so otherwise.
     """
+
     if name == "default_name":
         name = input("Enter a name for the new project: ")
 
@@ -36,11 +37,13 @@ def project_setup(name, path, settings, set_active=True):
 
 def add_counters(num_counters, project_dict):
     """
-    Adds num_counters amount of counters to the project json. Asks user for names, rollover value, and relationship
+    Adds num_counters amount of counters to the project json.
+    Asks user for names, rollover value, and relationship
     between counters.
     """
     # TODO set counter relationships
     counters = project_dict["counters"]
+
     for _ in range(num_counters):
         counter_name = input("Please enter a counter name: ")
         rollover = input("Please give a rollover number for the counter: ")
@@ -50,9 +53,11 @@ def add_counters(num_counters, project_dict):
         print()
 
     default_counter = input("Enter the default counter name: ")
+
     if default_counter not in counters.keys():
         print(
-            f"The default counter entered was not in {list(counters.keys())} and will be the first listed.\nYou can change this with the -D option."
+            f"The default counter entered was not in {list(counters.keys())} "
+            "and will be the first listed.\nYou can change this with the -d option."
         )
         default_counter = list(counters.keys())[0]
         print(f"The default counter is {default_counter}")
@@ -87,6 +92,7 @@ def switch_current_project(project_file, config):
     Switches the active project to project_file.
     config should be a tomlkit document.
     """
+
     if project_file in config["Available Projects"]:
         config["Current Project"] = project_file
     else:
@@ -101,6 +107,7 @@ def get_config(config_file="./knitter.toml"):
     """
     with open(config_file, "r") as file:
         config = tomlkit.load(file)
+
     return config
 
 
@@ -118,6 +125,7 @@ def get_project(project_path):
     """
     with open(project_path, "r") as file:
         project_dict = json.load(file)
+
     return project_dict
 
 
@@ -134,6 +142,7 @@ def make_project_dir(folder="./Projects"):
     Separate Project directory creation. Use in config init and
     project setup.
     """
+
     if not Path(folder).exists():
         Path(folder).mkdir()
 
@@ -153,15 +162,23 @@ def config_init():
 
 
 def main(args):
+    """
+    Parse command line arguments and increment counters.
+    """
     # config handling
+
     if not Path("./knitter.toml").exists():
         config_init()
     settings = get_config()
     project_dict = None
 
     # argparse handling
+
     if "Current Project" not in settings:
-        path = input("Enter project directory or leave blank for default ./Projects/" ) or "./Projects"
+        path = (
+            input("Enter project directory or leave blank for default ./Projects/")
+            or "./Projects"
+        )
         make_project_dir(folder=path)
         project_setup(args.active_name, path, settings)
     # Previously combined with the preceding condition. Separated for readability.
@@ -184,11 +201,13 @@ def main(args):
         counter_name = None
 
         # allows for handling of no arguments provided
+
         if args.active_name != "default_name":
             counter_name = args.active_name
         inc_counter(counter_name, project_dict)
 
     put_config(settings)
+
     if project_dict:
         put_project(project_dict=project_dict)
 
@@ -209,7 +228,8 @@ if __name__ == "__main__":
         "--setup",
         nargs="*",
         # default="default_name",
-        help="Provide the name of a new knitting project. Optional second item can be a directory location to put project file in.",
+        help="Provide the name of a new knitting project."
+        " Optional second item can be a directory location to put project file in.",
     )
     parser.add_argument(
         "-p",
@@ -217,7 +237,9 @@ if __name__ == "__main__":
         help="Project to switch to. Must be a relative path to the current working directory.",
     )
     parser.add_argument(
-        "-D", "--default_counter", help="The counter to set as default."
+        "-d", "--default_counter", help="The counter to set as default."
     )
-    args = parser.parse_args()
-    main(args)
+    # removed -i interactive mode option, possible to get key listener modules,
+    # but will just go straight to textual interface.
+    p_args = parser.parse_args()
+    main(p_args)
